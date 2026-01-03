@@ -1,0 +1,130 @@
+services:
+  jellyseerr:
+    image: ghcr.io/fallenbagel/jellyseerr:latest
+    init: true
+    container_name: jellyseerr
+    extends:
+      file: ${TEMPLATES_PATH}
+      service: media 
+    environment:
+      - LOG_LEVEL=debug
+      - TZ=America/New_York
+      - PORT=5055 #optional
+    volumes:
+      - ./jellyseer/config:/app/config
+    ports:
+      - 5055:5055
+    healthcheck:
+      test: wget --no-verbose --tries=1 --spider http://localhost:5055/api/v1/status || exit 1
+      start_period: 20s
+      timeout: 3s
+      interval: 15s
+      retries: 3
+  jellyfin:
+    image: ghcr.io/linuxserver/jellyfin
+    container_name: jellyfin
+    extends:
+      file: ${TEMPLATES_PATH}
+      service: media 
+    volumes:
+      - ./jellyfin:/config
+      - ./jellyfin/index.html:/usr/share/jellyfin/web/index.html
+      - /data/media:/data/media
+    ports:
+      - 8096:8096
+  gluetun:
+    image: qmcgaw/gluetun
+    extends:
+      file: ${TEMPLATES_PATH}
+      service: media 
+    devices:
+      - /dev/net/tun:/dev/net/tun
+    volumes:
+      - ./gluetun:/gluetun
+    ports:
+      - 8888:8888/tcp # HTTP proxy
+      - 8388:8388/tcp # Shadowsocks
+      - 8388:8388/udp # Shadowsocks
+      - 8080:8080 # qbittorrent
+    environment:
+      # See https://github.com/qdm12/gluetun-wiki/tree/main/setup#setup
+      - VPN_SERVICE_PROVIDER=${VPN_SERVICE_PROVIDER}
+      - VPN_TYPE=${VPN_TYPE}
+      - WIREGUARD_PRIVATE_KEY=${WIREGUARD_PRIVATE_KEY}
+      - WIREGUARD_ADDRESSES=${WIREGUARD_ADDRESSES}
+      - SERVER_COUNTRIES=${SERVER_COUNTRIES}
+    cap_add:
+      - NET_ADMIN
+  qbittorrent:
+    image: ghcr.io/linuxserver/qbittorrent
+    container_name: qbittorrent
+    environment:
+      - WEBUI_PORT=8080
+    volumes:
+      - ./qbittorrent:/config
+      - /data/torrents:/data/torrents
+    network_mode: service:gluetun
+    restart: unless-stopped
+  prowlarr:
+    image: lscr.io/linuxserver/prowlarr:develop
+    container_name: prowlarr
+    extends:
+      file: ${TEMPLATES_PATH}
+      service: media 
+    environment:
+      - TZ=America/New_York
+    volumes:
+      - ./prowlarr:/config
+    ports:
+      - 9696:9696 # prowlarr
+  tor:
+    image: dperson/torproxy
+    container_name: tor
+    ports:
+      - 9050:9050
+    extends:
+      file: ${TEMPLATES_PATH}
+      service: media 
+  sonarr:
+    image: ghcr.io/linuxserver/sonarr
+    container_name: sonarr
+    extends:
+      file: ${TEMPLATES_PATH}
+      service: media 
+    environment:
+      - TZ=EST
+    volumes:
+      - ./sonarr:/config
+      - /data:/data
+    ports:
+      - 8989:8989
+  radarr:
+    image: ghcr.io/linuxserver/radarr
+    container_name: radarr
+    extends:
+      file: ${TEMPLATES_PATH}
+      service: media 
+    environment:
+      - TZ=EST
+    volumes:
+      - ./radarr:/config
+      - /data:/data
+    ports:
+      - 7878:7878
+  janitorr:
+    image: ghcr.io/schaka/janitorr:jvm-stable
+    container_name: janitorr
+    extends:
+      file: ${TEMPLATES_PATH}
+      service: media 
+    user: "${PUID}:${PGID}" # Replace with your user who should own your application.yml file
+    mem_limit: 256M # is used to dynamically calculate heap size, can go as low as 200MB, but 256 is recommended - higher for very large libraries
+    mem_swappiness: 0
+    volumes:
+      - ./janitorr/config/application.yml:/config/application.yml
+      - ./janitorr/logs:/logs
+      - /data:/data
+# uncomment if not running with upper level compose file
+# networks:
+#   media_net:
+#     driver: bridge

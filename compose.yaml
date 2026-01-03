@@ -1,0 +1,16 @@
+# Here I will include all "child" docker compose files that I need.
+# Whenever I need to remove some service then I can comment out the lines here. 
+include:
+  - path:
+      - ./media/compose.yaml
+    # env_file: ./media/.env
+  - path:
+      - ./networking/compose.yaml
+    env_file: ./networking/.env
+
+# Below I would place all the "common" configuration that I need. For example volumes or networks that will be used by "child" compose files.
+networks:
+  media_net:
+    driver: bridge
+  networking_net:
+    driver: bridge

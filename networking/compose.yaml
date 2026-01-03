@@ -1,0 +1,53 @@
+services:
+  caddy:
+    # Use the caddy:latest image from Docker Hub
+    image: caddy:latest
+    # Restart policy: restart the container unless explicitly stopped
+    container_name: caddy
+    volumes:
+      # Mount the host Caddyfile
+      - ./caddy/Caddyfile:/etc/caddy/Caddyfile
+      - ./caddy/data:/data
+      - ./caddy/config:/config
+    # Connect the Caddy container to networks of apps it needs to proxy to
+    networks:
+      - media_net 
+      - networking_net
+    # ports for Caddy
+    ports:
+      - 80:80
+      - 443:443
+      - 443:443/udp
+    restart: unless-stopped
+  pihole:
+    container_name: pihole
+    image: pihole/pihole:latest
+    networks:
+      - networking_net
+    ports:
+      # DNS Ports
+      - 53:53/tcp
+      - 53:53/udp
+      # Default HTTP Port
+      - 280:80/tcp
+      # Default HTTPs Port. FTL will generate a self-signed certificate
+      - 2443:443/tcp
+      # Uncomment the below if using Pi-hole as your DHCP Server
+      #- "67:67/udp"
+      # Uncomment the line below if you are using Pi-hole as your NTP server
+      #- "123:123/udp"
+    environment:
+      # Set the appropriate timezone for your location from
+      # https://en.wikipedia.org/wiki/List_of_tz_database_time_zones, e.g:
+      TZ: 'America/Toronto'
+      # Set a password to access the web interface. Not setting one will result in a random password being assigned
+      FTLCONF_webserver_api_password: '${PIHOLE_PASSWORD}'
+      # If using Docker's default `bridge` network setting the dns listening mode should be set to 'ALL'
+      FTLCONF_dns_listeningMode: 'ALL'
+    # Volumes store your data between container upgrades
+    volumes:
+      # For persisting Pi-hole's databases and common configuration file
+      - './pihole/data:/etc/pihole'
+    cap_add:
+      - NET_ADMIN   # Needed for DNS
+    restart: unless-stopped

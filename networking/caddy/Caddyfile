@@ -1,0 +1,37 @@
+jellyseerr.home.arpa {
+    reverse_proxy jellyseerr:5055
+    tls internal
+}
+
+jellyfin.home.arpa {
+    reverse_proxy jellyfin:8096
+    tls internal
+}
+
+pihole.home.arpa {
+    # Redirect / → /admin
+    @root path /
+    redir @root /admin 302
+
+    reverse_proxy pihole:80
+    tls internal
+}
+
+radarr.home.arpa {
+    reverse_proxy radarr:7878
+    tls internal
+}
+
+sonarr.home.arpa {
+    reverse_proxy sonarr:8989
+    tls internal
+}
+qbit.home.arpa {
+    reverse_proxy gluetun:8080
+    tls internal
+}
+
+prowlarr.home.arpa {
+    reverse_proxy prowlarr:9696
+    tls internal
+}
