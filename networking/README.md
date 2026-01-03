@@ -105,6 +105,48 @@ networks:
 
 Line 3: Use Caddy's internal, locally-trusted CA to produce certificates for this site for HTTPS access. This will show as `Connection is insecure` in the browser, because the browser doesn't trust the self-signed or internal CA certificate Caddy uses for local domains. You can accept this, or add the root certificate from Caddy to your local client machine.
 
+### Trusting root.crt on client machines
+
+1. sftp the root.crt from host machine
+
+```
+>sftp user@ip.address
+>get docker/networking/caddy/data/caddy/pki/authorities/local/root.crt
+```
+
+2. Trust the cert
+
+```
+# mac
+sudo security add-trusted-cert \
+  -d -r trustRoot \
+  -k /Library/Keychains/System.keychain \
+  root.crt
+
+# linux
+sudo cp root.crt /usr/local/share/ca-certificates/caddy.crt
+sudo update-ca-certificates
+```
+
+3. Firefox (if system trust isn’t used)
+   - Settings → Privacy & Security
+   - Certificates → View Certificates
+   - Authorities → Import
+   - Select root.crt
+   - Check Trust this CA to identify websites
+
+4. iPhone / iPad (iOS)
+   - Install the certificate
+   - Open root.crt on the phone
+   - Tap Allow → Close
+   - Go to Settings → General → VPN & Device Management
+   - Tap Downloaded Profile
+   - Tap Install
+   - Enable full trust (important!)
+     - Go to Settings → General → About
+     - Scroll down → Certificate Trust Settings
+     - Enable Full Trust for the Caddy certificate
+
 ## Result
 
 So the final path a user request would take would look like:
