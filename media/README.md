@@ -18,11 +18,11 @@ Create this file structure at the root. I did it at the root to make path mgmt e
 ```
 # assume root
 sudo -i
-mkdir -p /data/media/tv
-mkdir -p /data/media/movies
-mkdir -p /data/media/leaving-soon
-mkdir -p /data/torrents/tv
-mkdir -p /data/torrents/movies
+mkdir -p /data/media/tv/
+mkdir -p /data/media/movies/
+mkdir -p /data/media/leaving-soon/
+mkdir -p /data/torrents/tv/
+mkdir -p /data/torrents/movies/
 
 #Recursively chown user and group (name of user, e.g. richard) and Recursively chmod to 775/664
 chown -R $USER:$USER /data
