@@ -8,7 +8,7 @@ This homelab is currently broken down into these services:
 - A media group that handles Movie & TV Shows, with endpoints to request and watch content, as well as manage all services.
   - Prowlarr: Indexes torrent trackers for downstream services to search for content
   - Sonarr: Manages TV Shows
-  - Radarr: Manages Movies
+- Radarr: Manages Movies
   - Janitorr: Automatic removal of content
   - qBittorrent: Manages content torrents
   - tor: Network to access certain indexers through the tor network
@@ -39,3 +39,9 @@ sudo docker compose up -d
 
 4. Head into `media` and follow the `README.md`. Should be pretty straightforward.
 5. Head into `networking` and follow the `README.md`. You should ensure that the IPs used here should be updated in the WireGuard configs.
+
+6. Setup docker engine to start on boot, which should automaticall spin up all containers on boot:
+
+```
+sudo systemctl enable docker
+```

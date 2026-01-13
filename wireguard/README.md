@@ -88,13 +88,41 @@ sudo cp wg0-server.conf /etc/wireguard/wg0.conf
 6. Allow packets to be port-forwarded to WireGuard:
 
 ```
-sudo sysctl -w net.ipv4.ip_forward=1
+sudo echo "net.ipv4.ip_forward = 1" > /etc/sysctl.d/99-ipforward.conf
+# Apply the port forwarding
+sudo sysctl --system
+# verify the port forwarding
+sysctl net.ipv4.ip_forward
 ```
 
 7. Bring up the wireguard interface `wg0`:
 
 ```
 sudo wg-quick up wg0
+```
+
+8. Setup WireGuard to bring up the interface on boot, which requires the `/etc/wireguard/wg0.conf`:
+
+```
+sudo systemctl enable wg-quick@wg0.service
+sudo systemctl daemon-reload
+sudo systemctl start wg-quick@wg0.service
+```
+
+## Troubleshooting
+
+I've had issues setting up the WireGuard server on a subsequent WireGuard server, and the following may have been able to fix that on the WireGuard server:
+
+```
+sudo iptables -A INPUT -p udp --dport 51820 -j ACCEPT
+sudo iptables -A INPUT -m state --state ESTABLISHED,RELATED -j ACCEPT
+sudo iptables -t nat -A POSTROUTING -s 10.0.0.0/24 -o ens18 -j MASQUERADE
+```
+
+Test to see incoming traffic at port 51820
+
+```
+sudo tcpdump -ni ens18 udp port 51820
 ```
 
 # Setup client (Mac)
