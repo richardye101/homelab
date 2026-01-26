@@ -60,11 +60,17 @@ services:
     container_name: qbittorrent
     environment:
       - WEBUI_PORT=8080
+      - PUID=${PUID}
+      - PGID=${PGID}
     volumes:
       - ./qbittorrent:/config
       - /data/torrents:/data/torrents
     network_mode: service:gluetun
     restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          memory: 2g
   prowlarr:
     image: lscr.io/linuxserver/prowlarr:develop
     container_name: prowlarr

@@ -45,3 +45,36 @@ sudo docker compose up -d
 ```
 sudo systemctl enable docker
 ```
+
+## Docker Compose Troubleshooting
+
+I've run into this issue:
+
+```
+Error response from daemon: failed to create task for container: failed to create shim task: OCI runtime create failed: runc create failed: unable to start container process: can't get final child's PID from pipe: EOF
+```
+
+And I solved it by:
+
+```
+sudo systemctl stop docker.service
+# because I had setup docker to start on boot
+sudo systemctl stop docker.socket
+sudo systemctl stop containerd.service
+
+systemctl status docker docker.socket containerd
+
+sudo rm -rf /var/lib/docker
+sudo rm -rf /var/lib/containerd
+sudo rm -rf /run/docker
+sudo rm -rf /run/containerd
+
+sudo reboot
+
+# After restart
+sudo systemctl start containerd
+sudo systemctl start docker
+# Test docker
+sudo docker run --rm alpine echo OK
+sudo systemctl enable docker
+```

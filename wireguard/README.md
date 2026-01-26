@@ -88,11 +88,11 @@ sudo cp wg0-server.conf /etc/wireguard/wg0.conf
 6. Allow packets to be port-forwarded to WireGuard:
 
 ```
-sudo echo "net.ipv4.ip_forward = 1" > /etc/sysctl.d/99-ipforward.conf
+echo "net.ipv4.ip_forward = 1" | sudo tee /etc/sysctl.d/99-ipforward.conf
 # Apply the port forwarding
 sudo sysctl --system
 # verify the port forwarding
-sysctl net.ipv4.ip_forward
+sudo sysctl net.ipv4.ip_forward
 ```
 
 7. Bring up the wireguard interface `wg0`:
