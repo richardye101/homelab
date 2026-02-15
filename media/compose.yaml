@@ -1,25 +1,23 @@
 services:
-  jellyseerr:
-    image: ghcr.io/fallenbagel/jellyseerr:latest
+  seerr:
+    image: ghcr.io/seerr-team/seerr:latest
     init: true
-    container_name: jellyseerr
-    extends:
-      file: ${TEMPLATES_PATH}
-      service: media 
+    container_name: seerr
     environment:
       - LOG_LEVEL=debug
-      - TZ=America/New_York
+      - TZ=Asia/Tashkent
       - PORT=5055 #optional
-    volumes:
-      - ./jellyseer/config:/app/config
     ports:
       - 5055:5055
+    volumes:
+      - /path/to/appdata/config:/app/config
     healthcheck:
       test: wget --no-verbose --tries=1 --spider http://localhost:5055/api/v1/status || exit 1
       start_period: 20s
       timeout: 3s
       interval: 15s
       retries: 3
+    restart: unless-stopped
   jellyfin:
     image: ghcr.io/linuxserver/jellyfin
     container_name: jellyfin
