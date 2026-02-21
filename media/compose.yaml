@@ -115,19 +115,22 @@ services:
       - /data:/data
     ports:
       - 7878:7878
-  janitorr:
-    image: ghcr.io/schaka/janitorr:jvm-stable
-    container_name: janitorr
+  dispatcharr:
+    image: ghcr.io/dispatcharr/dispatcharr:latest
+    restart: unless-stopped
+    container_name: dispatcharr
     extends:
       file: ${TEMPLATES_PATH}
-      service: media 
-    user: "${PUID}:${PGID}" # Replace with your user who should own your application.yml file
-    mem_limit: 256M # is used to dynamically calculate heap size, can go as low as 200MB, but 256 is recommended - higher for very large libraries
-    mem_swappiness: 0
+      service: media
+    ports:
+      - 9191:9191
     volumes:
-      - ./janitorr/config/application.yml:/config/application.yml
-      - ./janitorr/logs:/logs
-      - /data:/data
+      - ./dispatcharr:/data
+    environment:
+      - DISPATCHARR_ENV=aio
+      - REDIS_HOST=localhost
+      - CELERY_BROKER_URL=redis://localhost:6379/0
+      - DISPATCHARR_LOG_LEVEL=info
 # uncomment if not running with upper level compose file
 # networks:
 #   media_net:
