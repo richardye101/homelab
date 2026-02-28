@@ -3,14 +3,17 @@ services:
     image: ghcr.io/seerr-team/seerr:latest
     init: true
     container_name: seerr
+    extends:
+      file: ${TEMPLATES_PATH}
+      service: media
     environment:
       - LOG_LEVEL=debug
-      - TZ=Asia/Tashkent
+      - TZ=America/New_York
       - PORT=5055 #optional
     ports:
       - 5055:5055
     volumes:
-      - /path/to/appdata/config:/app/config
+      - ./seerr/config:/app/config
     healthcheck:
       test: wget --no-verbose --tries=1 --spider http://localhost:5055/api/v1/status || exit 1
       start_period: 20s
@@ -21,20 +24,29 @@ services:
   jellyfin:
     image: ghcr.io/linuxserver/jellyfin
     container_name: jellyfin
+    deploy:
+      resources:
+        limits:
+          memory: 4G
+        reservations:
+          memory: 2G
     extends:
       file: ${TEMPLATES_PATH}
-      service: media 
+      service: media
+    environment:
+      - MALLOC_TRIM_THRESHOLD_=100000  # forces the underlying Linux memory allocator to return memory to the system much more aggressively
     volumes:
       - ./jellyfin:/config
-      - ./jellyfin/index.html:/usr/share/jellyfin/web/index.html
+      # - ./jellyfin/index.html:/usr/share/jellyfin/web/index.html
       - /data/media:/data/media
     ports:
       - 8096:8096
   gluetun:
     image: qmcgaw/gluetun
+    container_name: gluetun
     extends:
       file: ${TEMPLATES_PATH}
-      service: media 
+      service: media
     devices:
       - /dev/net/tun:/dev/net/tun
     volumes:
@@ -56,6 +68,12 @@ services:
   qbittorrent:
     image: ghcr.io/linuxserver/qbittorrent
     container_name: qbittorrent
+    deploy:
+      resources:
+        limits:
+          memory: 2G  # Hard limit: process dies if it exceeds this
+        reservations:
+          memory: 1G  # Soft limit: ensures at least 1GB is available
     environment:
       - WEBUI_PORT=8080
       - PUID=${PUID}
@@ -65,16 +83,12 @@ services:
       - /data/torrents:/data/torrents
     network_mode: service:gluetun
     restart: unless-stopped
-    deploy:
-      resources:
-        limits:
-          memory: 2g
   prowlarr:
     image: lscr.io/linuxserver/prowlarr:develop
     container_name: prowlarr
     extends:
       file: ${TEMPLATES_PATH}
-      service: media 
+      service: media
     environment:
       - TZ=America/New_York
     volumes:
@@ -88,13 +102,13 @@ services:
       - 9050:9050
     extends:
       file: ${TEMPLATES_PATH}
-      service: media 
+      service: media
   sonarr:
     image: ghcr.io/linuxserver/sonarr
     container_name: sonarr
     extends:
       file: ${TEMPLATES_PATH}
-      service: media 
+      service: media
     environment:
       - TZ=EST
     volumes:
@@ -107,7 +121,7 @@ services:
     container_name: radarr
     extends:
       file: ${TEMPLATES_PATH}
-      service: media 
+      service: media
     environment:
       - TZ=EST
     volumes:
@@ -132,6 +146,6 @@ services:
       - CELERY_BROKER_URL=redis://localhost:6379/0
       - DISPATCHARR_LOG_LEVEL=info
 # uncomment if not running with upper level compose file
-# networks:
-#   media_net:
-#     driver: bridge
+networks:
+  media_net:
+    driver: bridge
