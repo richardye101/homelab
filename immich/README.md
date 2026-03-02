@@ -67,3 +67,25 @@ mv /opt/immich/app/machine-learning/upload /opt/immich/app/machine-learning/uplo
 ln -s /data/upload /opt/immich/app/machine-learning/upload
 chown -R immich:immich /opt/immich/app/machine-learning/upload
 ```
+
+8. Setup Backup:
+
+I mounted a separate drive in proxmox:
+
+```
+UUID=drive_uuid /backup ext4 defaults,nofail,x-systemd.device-timeout=10s,noatime,errors=remount-ro 0 2
+```
+
+And mounted it into the LXC:
+
+```
+pct set 100 --mp1 /backup/immich,mp=/backup
+```
+
+Withing the immich LXC, i setup a cron job useing `crontab -e`:
+
+```
+0 5 * * 0 rsync -avzh --info=progress2 /data/upload/library/ /backup
+```
+
+> For this to work, I believe you need storage templates turned on. I did this, and it reorganizes your media into `/data/upload/library/user_id`
