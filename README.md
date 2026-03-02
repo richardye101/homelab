@@ -78,3 +78,44 @@ sudo systemctl start docker
 sudo docker run --rm alpine echo OK
 sudo systemctl enable docker
 ```
+
+## Crashes
+
+Tweaks i'm making to the proxmox VM:
+
+- Run this on the Proxmox host to allow more "time" for interrupts
+
+```
+sysctl -w kernel.perf_event_max_sample_rate=100000
+```
+
+- Disable "C-States" (Dell Stability Fix)
+
+The poll_idle and cpuidle_enter mentions in your logs suggest the CPU is crashing while trying to transition between power-saving states.
+
+    Action: In the Dell BIOS, go to Performance > C-States Control and uncheck the box to disable them. This is a common "silver bullet" for Dell micro-PCs running Proxmox that experience random freezes.
+
+- Set ZFS pool limits on the proxmox host:
+
+Create/Edit the config file:
+
+```
+vi /etc/modprobe.d/zfs.conf
+```
+
+Add the following line (Example for 4GB limit = `4 * 1024^3`):
+
+```
+options zfs zfs_arc_max=8589934592
+```
+
+Update the boot image:
+This is the step most people miss. Since ZFS loads very early in the boot process, you must refresh the initramfs.
+
+```
+update-initramfs -u -k all
+```
+
+Reboot your Proxmox host.
+
+- Set limits for containers which can take up a lot of memory (`qbittorrent`, `jellyfin`), as well as set the proxmox VM memory limit such that there is at least 2-4 GB of free RAM on the host. For example, I have 16GB host RAM, 6GB assigned to the media VM, 2 assigned to Immich, and 4 alloacted for the ZFS pool.
