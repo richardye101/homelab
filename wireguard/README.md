@@ -65,10 +65,11 @@ So my LAN IP is `192.168.0.2` and my interface is `ens18`
 ```
 [Interface]
 Address=10.0.0.1/24 # Make sure this private address range is not in use. /24 gives a small/secure subnet
-SaveConfig=true
+SaveConfig=false
 # this set of PostUp/PostDown only allows VPN clients to send packets in, and makes the VPN client look like it's in the home network.
 PostUp=iptables -A FORWARD -i wg0 -j ACCEPT; iptables -t nat -A POSTROUTING -o <INTERFACE> -j MASQUERADE;
 PostDown=iptables -D FORWARD -i wg0 -j ACCEPT; iptables -t nat -D POSTROUTING -o <INTERFACE> -j MASQUERADE;
+MTU=1280
 
 # this set of PostUp/PostDown accepts traffic coming IN from VPN clients, allow reply traffic back to VPN clients, but only for connections they started, rewrite VPN traffic so it looks like it's coming from the home network
 # this is the set you want to access websites (Netflix) while looking like you're at home.
@@ -78,6 +79,8 @@ PostDown=iptables -D FORWARD -i wg0 -j ACCEPT; iptables -D FORWARD -o wg0 -m con
 ListenPort=51820 # Standard port for WireGuard
 PrivateKey=<PRIVATEKEY-SERVER>
 ```
+
+> MTU is set to 1280, as a potential solution to UDP packets being to large and hanging the connection if the entire packet is not transferred properly.
 
 5. Move the `wg0-server.conf` to `/etc/wireguard/wg0.conf`:
 
@@ -107,6 +110,20 @@ sudo wg-quick up wg0
 sudo systemctl enable wg-quick@wg0.service
 sudo systemctl daemon-reload
 sudo systemctl start wg-quick@wg0.service
+```
+
+## Setup Self-Healing
+
+There have been a few times that WireGuard has frozen on me or broke while being configured properly. I've created a small script which checks that all handshakes with connected peers last renewed within the past 5 minutes and if not, restart the wg0 interface. You should find it as `heal.sh`. I added a cron job which runs this script every 5 minutes.
+
+```
+crontab -e
+```
+
+Insert the following line at the bottom and save:
+
+```
+*/5 * * * * ~/wireguard/heal.sh > /dev/null 2>&1
 ```
 
 ## Troubleshooting
