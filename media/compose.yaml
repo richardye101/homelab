@@ -20,7 +20,6 @@ services:
       timeout: 3s
       interval: 15s
       retries: 3
-    restart: unless-stopped
   jellyfin:
     image: ghcr.io/linuxserver/jellyfin
     container_name: jellyfin
@@ -96,10 +95,10 @@ services:
     ports:
       - 9696:9696 # prowlarr
   tor:
-    image: dperson/torproxy
+    image: peterdavehello/tor-socks-proxy
     container_name: tor
     ports:
-      - 9050:9050
+      - 9150:9150
     extends:
       file: ${TEMPLATES_PATH}
       service: media
@@ -131,7 +130,6 @@ services:
       - 7878:7878
   dispatcharr:
     image: ghcr.io/dispatcharr/dispatcharr:latest
-    restart: unless-stopped
     container_name: dispatcharr
     extends:
       file: ${TEMPLATES_PATH}
