@@ -114,9 +114,10 @@ sudo systemctl start wg-quick@wg0.service
 
 ## Setup Self-Healing
 
-There have been a few times that WireGuard has frozen on me or broke while being configured properly. I've created a small script which checks that all handshakes with connected peers last renewed within the past 5 minutes and if not, restart the wg0 interface. You should find it as `heal.sh`. I added a cron job which runs this script every 5 minutes.
+There have been a few times that WireGuard has frozen on me or broke while being configured properly. I've created a small script which checks that all handshakes with connected peers last renewed within the past 5 minutes and if not, restart the wg0 interface. You should find it as `heal.sh`. I added a cron job which runs this script every 5 minutes. **Ensure you add this as root!**
 
 ```
+su -
 crontab -e
 ```
 
