@@ -22,6 +22,7 @@ done
 if [ "$RESTART_NEEDED" = true ]; then
     echo "No active handshakes found. Restarting $INTERFACE..."
     # systemctl restart wg-quick@$INTERFACE
+    sudo ip addr flush dev wlan0
+    sudo systemctl restart networking
     sudo wg-quick down wg0 && sudo wg-quick up wg0
 fi
-
